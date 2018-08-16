@@ -1,0 +1,299 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "API spec for Sly Subscriptions",
+    "version" : "1.0.0",
+    "title" : "Sly Subscriptions API",
+    "contact" : {
+      "email" : "alec@slytrunk.com"
+    }
+  },
+  "tags" : [ {
+    "name" : "platform",
+    "description" : "Operations that can be called by any consuming platform"
+  }, {
+    "name" : "admin",
+    "description" : "Operations that can should only be accessible by an admin"
+  } ],
+  "paths" : {
+    "/users" : {
+      "get" : {
+        "tags" : [ "platform" ],
+        "summary" : "lists all users",
+        "operationId" : "usersIndex",
+        "description" : "Gets a list of all users\n",
+        "produces" : [ "application/json" ],
+        "responses" : {
+          "200" : {
+            "description" : "list of users",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/User"
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "admin" ],
+        "summary" : "creates a new user",
+        "operationId" : "createUser",
+        "description" : "Creates a new user record",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "user",
+          "description" : "User to create",
+          "schema" : {
+            "$ref" : "#/definitions/User"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/users/{id}/entitlements" : {
+      "get" : {
+        "tags" : [ "platform" ],
+        "summary" : "lists entitlements for a user",
+        "operationId" : "userEntitlements",
+        "description" : "Gets a list current entitlements for a user\n",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "description" : "the user ID that you are making the request for",
+          "required" : true,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "produces" : [ "application/json" ],
+        "responses" : {
+          "200" : {
+            "description" : "list of current entitlements",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Entitlement"
+              }
+            }
+          },
+          "400" : {
+            "description" : "invalid user id provided"
+          }
+        }
+      }
+    },
+    "/users/{id}/authorize/{action}" : {
+      "get" : {
+        "tags" : [ "platform" ],
+        "summary" : "authorize an action for a user",
+        "operationId" : "authorizeAction",
+        "description" : "By passing in a User ID and Action name, you can determine whether or not the user is authorized to perform the action based on their current subscriptions.\n",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "description" : "the user ID that you are make the request for",
+          "required" : true,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "in" : "path",
+          "name" : "action",
+          "description" : "the name of the action/entitlement that you're trying to authorize",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "user is entitled for this action"
+          },
+          "401" : {
+            "description" : "user does not have the appropriate entitlement"
+          }
+        }
+      }
+    },
+    "/subscriptions" : {
+      "post" : {
+        "tags" : [ "admin" ],
+        "summary" : "creates a new subscription",
+        "operationId" : "createSubscription",
+        "description" : "Creates a new subscription record. No entitlements are created by default.",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "newSubscription",
+          "description" : "Subscription object to create",
+          "schema" : {
+            "$ref" : "#/definitions/Subscription"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "subscription created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing subscription already exists"
+          }
+        }
+      }
+    },
+    "/subscriptions/{id}" : {
+      "put" : {
+        "tags" : [ "admin" ],
+        "summary" : "updates an existing subscription",
+        "operationId" : "updateSubscription",
+        "description" : "Updates an existing subscription record.",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "id of the subscription that is being updated",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "subscription",
+          "description" : "Updated subscription object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Subscription"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "subscription created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing subscription already exists"
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "User" : {
+      "type" : "object",
+      "required" : [ "email" ],
+      "properties" : {
+        "id" : {
+          "type" : "string",
+          "format" : "int32",
+          "example" : 635,
+          "readOnly" : true
+        },
+        "email" : {
+          "type" : "string",
+          "example" : "alec@slytrunk.com"
+        },
+        "created_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        },
+        "updated_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        },
+        "subscriptions" : {
+          "type" : "array",
+          "readOnly" : true,
+          "items" : {
+            "$ref" : "#/definitions/Subscription"
+          }
+        }
+      }
+    },
+    "Subscription" : {
+      "type" : "object",
+      "properties" : {
+        "id" : {
+          "type" : "integer",
+          "format" : "int32",
+          "example" : 82,
+          "readOnly" : true
+        },
+        "name" : {
+          "type" : "string",
+          "example" : "WSL Premium"
+        },
+        "cost" : {
+          "type" : "string",
+          "format" : "currency",
+          "example" : "$19.99"
+        },
+        "term" : {
+          "type" : "number",
+          "example" : 12
+        },
+        "created_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        },
+        "updated_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        }
+      }
+    },
+    "Entitlement" : {
+      "type" : "object",
+      "properties" : {
+        "id" : {
+          "type" : "integer",
+          "format" : "int32",
+          "example" : 12,
+          "readOnly" : true
+        },
+        "subscription_id" : {
+          "type" : "integer",
+          "format" : "int32",
+          "example" : 82
+        },
+        "name" : {
+          "type" : "string",
+          "example" : "View Premium Content"
+        },
+        "action" : {
+          "type" : "string",
+          "example" : "VIEW_PREMIUM_CONTENT"
+        },
+        "created_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        },
+        "updated_at" : {
+          "type" : "string",
+          "example" : "2018-08-16 09:12:33",
+          "readOnly" : true
+        }
+      }
+    }
+  },
+  "host" : "virtserver.swaggerhub.com",
+  "basePath" : "/alecsanger/test-api/1.0.0",
+  "schemes" : [ "https" ]
+}
