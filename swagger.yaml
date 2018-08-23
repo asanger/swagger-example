@@ -9,15 +9,21 @@ info:
 
 # tags are used for organizing operations
 tags:
-- name: User
-  description: Operations that will generally be performed by a user. These will be scoped to the user based on their JWT, so they do not need to pass a `userId` parameter.
-- name: Admin
-  description: Operations that can only be used by admin users. Because admins can perform actions on behalf of other users, they may be required to pass a `userId` parameter in many situations.
+- name: Users
+  description: Operations that focus on users
+- name: Subscriptions
+  description: Operations that focus on subscriptions
+- name: Entitlements
+  description: Operations that focus on entitlements
+- name: Plans
+  description: Operations that focus on plans
 
 
 paths:
   /users:
     get:
+      tags:
+      - Users
       summary: lists all users
       operationId: getUsers
       description: |
@@ -32,6 +38,8 @@ paths:
             items:
               $ref: '#/definitions/User'
     post:
+      tags:
+      - Users
       summary: create a new user
       operationId: createUser
       description: Creates a new user record
@@ -57,6 +65,8 @@ paths:
 
   /users/{userId}:
     get:
+      tags:
+      - Users
       summary: list the details of a user
       operationId: getUser
       description: |
@@ -78,6 +88,8 @@ paths:
         404:
           description: user not found
     put:
+      tags:
+      - Users
       summary: update a user
       operationId: updateUser
       description: Updates an existing user.
@@ -108,6 +120,9 @@ paths:
 
   /users/{userId}/entitlements:
     get:
+      tags:
+      - Users
+      - Entitlements
       summary: list entitlements for a user
       operationId: userEntitlements
       description: |
@@ -133,6 +148,9 @@ paths:
 
   /users/{userId}/entitlement_codes:
     get:
+      tags:
+      - Users
+      - Entitlements
       summary: list entitlement codes for a user
       operationId: userEntitlementCodes
       description: |
@@ -159,6 +177,9 @@ paths:
 
   /users/{userId}/entitlements/{entitlementCode}:
     get:
+      tags:
+      - Users
+      - Entitlements
       summary: fetch entitlement from user
       operationId: getUserEntitlement
       description: |
@@ -183,6 +204,9 @@ paths:
 
   /users/{userId}/subscriptions:
     get:
+      tags:
+      - Users
+      - Subscriptions
       summary: fetch subscriptions for a user
       operationId: getUserSubscriptions
       description: |
@@ -210,6 +234,9 @@ paths:
         400:
           description: invalid user id provided
     post:
+      tags:
+      - Users
+      - Subscriptions
       summary: create a new subscription
       operationId: createSubscription
       description: Creates a new subscription record.
@@ -239,6 +266,8 @@ paths:
   
   /subscriptions/{subscriptionId}:
     get:
+      tags:
+      - Subscriptions
       summary: fetch a subscription
       operationId: getSubscription
       description: |
@@ -258,6 +287,8 @@ paths:
         404:
           description: subscription not found or does not belong to the user
     delete:
+      tags:
+      - Subscriptions
       summary: cancel an existing subscription
       operationId: cancelUserSubscription
       description: |
@@ -279,6 +310,8 @@ paths:
 
   /plans:
     get:
+      tags:
+      - Plans
       summary: get all plans
       operationId: getPlans
       description: |
@@ -300,6 +333,8 @@ paths:
         400:
           description: invalid user id provided
     post:
+      tags:
+      - Plans
       summary: create a new plan
       operationId: createPlan
       description: Creates a new plan record. No entitlements are created by default.
@@ -324,6 +359,8 @@ paths:
 
   /plans/{planId}:
     get:
+      tags:
+      - Plans
       summary: get a single plan
       operationId: getPlan
       description: |
@@ -343,6 +380,8 @@ paths:
         404:
           description: plan not found
     put:
+      tags:
+      - Plans
       summary: update an existing plan
       operationId: updatePlan
       description: Updates an existing plan record.
@@ -370,6 +409,8 @@ paths:
         404:
           description: plan not found
     delete:
+      tags:
+      - Plans
       summary: cancel an existing plan
       operationId: cancelPlan
       description: |
