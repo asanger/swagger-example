@@ -1,0 +1,507 @@
+swagger: '2.0'
+info:
+  description: API spec for Sly Subscriptions
+  version: 1.0.0
+  title: Sly Subscriptions API
+  # put the contact info for your development or API team
+  contact:
+    email: alec@slytrunk.com
+
+# tags are used for organizing operations
+tags:
+- name: User
+  description: Operations that will generally be performed by a user. These will be scoped to the user based on their JWT, so they do not need to pass a `userId` parameter.
+- name: Admin
+  description: Operations that can only be used by admin users. Because admins can perform actions on behalf of other users, they may be required to pass a `userId` parameter in many situations.
+
+
+paths:
+  /users:
+    get:
+      summary: lists all users
+      operationId: getUsers
+      description: |
+        Gets a list of all users
+      produces:
+      - application/json
+      responses:
+        200:
+          description: list of users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: create a new user
+      operationId: createUser
+      description: Creates a new user record
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: user
+        description: User to create
+        schema:
+          $ref: '#/definitions/User'
+      responses:
+        201:
+          description: item created
+          schema:
+            $ref: '#/definitions/User'
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+
+  /users/{userId}:
+    get:
+      summary: list the details of a user
+      operationId: getUser
+      description: |
+        Returns a single user's information
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are making the request for
+        required: true
+        type: string
+        format: uuid
+      produces:
+      - application/json
+      responses:
+        200:
+          description: user details
+          schema:
+            $ref: '#/definitions/User'
+        404:
+          description: user not found
+    put:
+      summary: update a user
+      operationId: updateUser
+      description: Updates an existing user.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: userId
+        in: path
+        description: id of the user to update
+        required: true
+        type: string
+        format: uuid
+      - in: body
+        name: body
+        description: Updated user object
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        204:
+          description: user updated
+        400:
+          description: invalid input, object invalid
+        404:
+          description: user not found
+
+  /users/{userId}/entitlements:
+    get:
+      summary: list entitlements for a user
+      operationId: userEntitlements
+      description: |
+        Gets a list current entitlements for a user
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are making the request for
+        required: true
+        type: string
+        format: uuid
+      produces:
+      - application/json
+      responses:
+        200:
+          description: list of current entitlements
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Entitlement'
+        400:
+          description: invalid user id provided
+
+  /users/{userId}/entitlement_codes:
+    get:
+      summary: list entitlement codes for a user
+      operationId: userEntitlementCodes
+      description: |
+        Gets a list current entitlement codes for a user. This is a convenience route and should be used when you are only checking for inclusion of an entitlement code in an array.
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are making the request for
+        required: true
+        type: string
+        format: uuid
+      produces:
+      - application/json
+      responses:
+        200:
+          description: list of current entitlement codes
+          schema:
+            type: array
+            items:
+              type: string
+            example: [PREMIUM_CONTENT,GOLD_STAR,FREQUENT_SURFER]
+        400:
+          description: invalid user id provided
+
+  /users/{userId}/entitlements/{entitlementCode}:
+    get:
+      summary: fetch entitlement from user
+      operationId: getUserEntitlement
+      description: |
+        By passing in a User ID and Entitlement Code, you can retrieve a the requested entitlement as long as it is associated with that user.
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are make the request for
+        required: true
+        type: string
+        format: uuid
+      - in: path
+        name: entitlementCode
+        description: the entitlement code that you're trying to check
+        required: true
+        type: string
+      responses:
+        200:
+          description: entitlement exists for this user 
+        404:
+          description: entitlement not found for this user
+
+  /users/{userId}/subscriptions:
+    get:
+      summary: fetch subscriptions for a user
+      operationId: getUserSubscriptions
+      description: |
+        By passing in a User ID, you can retrieve a list of subscriptions that are associated with that user. You can also provide an optional "status" query string parameter to only return results that match a particular status.
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are make the request for
+        required: true
+        type: string
+        format: uuid
+      - in: query
+        name: status
+        description: option parameter for only selecting subscriptions with a certain status
+        required: false
+        type: string
+        enum: [active, cancelled, expired]
+      responses:
+        200:
+          description: array of subscriptions for this user 
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Subscription'
+        400:
+          description: invalid user id provided
+    post:
+      summary: create a new subscription
+      operationId: createSubscription
+      description: Creates a new subscription record.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: userId
+        description: the user ID that you are creating the subscription for
+        required: true
+        type: string
+        format: uuid
+      - in: body
+        name: newSubscription
+        description: Subscription object to create
+        schema:
+          $ref: '#/definitions/Subscription'
+      responses:
+        201:
+          description: subscription created
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing subscription already exists
+  
+  /subscriptions/{subscriptionId}:
+    get:
+      summary: fetch a subscription
+      operationId: getSubscription
+      description: |
+        Fetch an existing subscription. A non-admin user can only fetch a subscription that belongs to them. a 404 will be returned if you attempt to fetch a subscription that does not belong to you.
+      parameters:
+      - in: path
+        name: subscriptionId
+        description: the subscription ID that you're requesting
+        required: true
+        type: string
+        format: uuid
+      responses:
+        200:
+          description: subscription object 
+          schema:
+            $ref: '#/definitions/Subscription'
+        404:
+          description: subscription not found or does not belong to the user
+    delete:
+      summary: cancel an existing subscription
+      operationId: cancelUserSubscription
+      description: |
+        Cancel an existing subscription. A non-admin user can only cancel a subscription that belongs to them. a 404 will be returned if you attempt to cancel a subscription that does not belong to you.
+      parameters:
+      - in: path
+        name: subscriptionId
+        description: the subscription ID that you're cancelling
+        required: true
+        type: integer
+        format: int32
+      responses:
+        202:
+          description: subscription has been cancelled 
+        400:
+          description: subscription cannot be cancelled (it may already be cancelled)
+        404:
+          description: subscription was not found or does not belong to the user
+
+  /plans:
+    get:
+      summary: get all plans
+      operationId: getPlans
+      description: |
+        Fetch a list of all plans. By default, this returns only plans that are active. You can pass an optional query string parameter of "allPlans=true" to return plans of any status.
+      parameters:
+      - in: query
+        name: allPlans
+        description: pass true to include plans that are not currently active
+        required: false
+        type: boolean
+        enum: [true, false]
+      responses:
+        200:
+          description: array of plans 
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Plan'
+        400:
+          description: invalid user id provided
+    post:
+      summary: create a new plan
+      operationId: createPlan
+      description: Creates a new plan record. No entitlements are created by default.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        description: Plan object to create
+        required: true
+        schema:
+          $ref: '#/definitions/Plan'
+      responses:
+        201:
+          description: plan created
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing plan already exists
+
+  /plans/{planId}:
+    get:
+      summary: get a single plan
+      operationId: getPlan
+      description: |
+        Get the details of a single plan.
+      parameters:
+      - in: path
+        name: planId
+        description: the plan ID that you're requesting
+        required: true
+        type: integer
+        format: int32
+      responses:
+        200:
+          description: plan object
+          schema:
+            $ref: '#/definitions/Plan'
+        404:
+          description: plan not found
+    put:
+      summary: update an existing plan
+      operationId: updatePlan
+      description: Updates an existing plan record.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: planId
+        in: path
+        description: id of the plan that is being updated
+        required: true
+        type: string
+      - in: body
+        name: body
+        description: Updated plan object
+        required: true
+        schema:
+          $ref: "#/definitions/Plan"
+      responses:
+        204:
+          description: plan updated
+        400:
+          description: invalid input, object invalid
+        404:
+          description: plan not found
+    delete:
+      summary: cancel an existing plan
+      operationId: cancelPlan
+      description: |
+        Cancel an existing plan by passing in a plan id. Cancelling a plan will not impact existing subscriptions, but will prevent new subscriptions from being created.
+      parameters:
+      - in: path
+        name: planId
+        description: the plan ID to cancel
+        required: true
+        type: integer
+        format: int32
+      responses:
+        202:
+          description: plan has been cancelled 
+        404:
+          description: plan not found
+
+definitions:
+  User:
+    type: object
+    required:
+    - email
+    properties:
+      id:
+        type: string
+        format: uuid
+        example: e4def176-3351-49cc-853e-1a69a71f642c
+        readOnly: true
+      email:
+        type: string
+        example: alec@slytrunk.com
+      created_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+      updated_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+
+  Plan:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 82
+        readOnly: true
+      client_id:
+        type: integer
+        format: int32
+        example: 12
+      name:
+        type: string
+        example: WSL Premium
+      cost:
+        type: string
+        format: currency
+        example: $19.99
+      term:
+        type: number
+        example: 12
+      created_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+      updated_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+  Entitlement:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 12
+        readOnly: true
+      subscription_id:
+        type: integer
+        format: int32
+        example: 82
+      name:
+        type: string
+        example: Premium Content
+      code:
+        type: string
+        example: PREMIUM_CONTENT
+      description:
+        type: string
+        example: Allows the user to view premium content.
+      created_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+      updated_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+  Subscription:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 12
+        readOnly: true
+      user_id:
+        type: integer
+        format: uuid
+        example: e4def176-3351-49cc-853e-1a69a71f642c
+      plan_id:
+        type: integer
+        example: 82
+      payment_platform:
+        type: string
+        enum: [stripe, apple]
+      status:
+        type: string
+        enum: [active, expired, cancelled]
+        readOnly: true
+      created_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+      updated_at:
+        type: string
+        example: '2018-08-16 09:12:33'
+        readOnly: true
+ 
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /alecsanger/test-api/1.0.0
+schemes:
+ - https
