@@ -10,13 +10,9 @@ info:
 # tags are used for organizing operations
 tags:
 - name: Users
-  description: Operations that focus on users
-- name: Subscriptions
-  description: Operations that focus on subscriptions
-- name: Entitlements
-  description: Operations that focus on entitlements
+  description: Operations that focus on users or are within the context of a single user. This can include subscriptions, since subscriptions belong to a user.
 - name: Plans
-  description: Operations that focus on plans
+  description: Operations that focus on plans. In general, these operations are not directly related to users and have a more global context.
 
 
 paths:
@@ -122,7 +118,6 @@ paths:
     get:
       tags:
       - Users
-      - Entitlements
       summary: list entitlements for a user
       operationId: userEntitlements
       description: |
@@ -150,7 +145,6 @@ paths:
     get:
       tags:
       - Users
-      - Entitlements
       summary: list entitlement codes for a user
       operationId: userEntitlementCodes
       description: |
@@ -179,7 +173,6 @@ paths:
     get:
       tags:
       - Users
-      - Entitlements
       summary: fetch entitlement from user
       operationId: getUserEntitlement
       description: |
@@ -206,7 +199,6 @@ paths:
     get:
       tags:
       - Users
-      - Subscriptions
       summary: fetch subscriptions for a user
       operationId: getUserSubscriptions
       description: |
@@ -236,7 +228,6 @@ paths:
     post:
       tags:
       - Users
-      - Subscriptions
       summary: create a new subscription
       operationId: createSubscription
       description: Creates a new subscription record.
@@ -267,7 +258,7 @@ paths:
   /subscriptions/{subscriptionId}:
     get:
       tags:
-      - Subscriptions
+      - Users
       summary: fetch a subscription
       operationId: getSubscription
       description: |
@@ -288,7 +279,7 @@ paths:
           description: subscription not found or does not belong to the user
     delete:
       tags:
-      - Subscriptions
+      - Users
       summary: cancel an existing subscription
       operationId: cancelUserSubscription
       description: |
